@@ -41,14 +41,7 @@ export default function NewAppointmentPage() {
     setLiveFlash(true);
     setTimeout(() => setLiveFlash(false), 2500);
 
-    // If the user had already selected a slot that is now gone, warn them
-    if (watchStartTime && !freshSlots.includes(watchStartTime)) {
-      setValue('startTime', '');
-      toast.error(
-        `⚡ The ${watchStartTime} slot was just taken by another customer. Please choose a different time.`,
-        { duration: 6000 },
-      );
-    }
+   
   }, [watchStartTime, setValue]);
 
   useSlotSocket({ serviceId: watchService, date: watchDate, onSlotsUpdated: handleSlotsUpdated });

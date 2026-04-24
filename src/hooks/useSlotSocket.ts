@@ -10,24 +10,29 @@ interface Options {
 export function useSlotSocket({ serviceId, date, onSlotsUpdated }: Options) {
   const socketRef = useRef<Socket | null>(null);
   const callbackRef = useRef(onSlotsUpdated);
-  callbackRef.current = onSlotsUpdated;
+  const serviceIdRef = useRef(serviceId);   // ← add
+  const dateRef = useRef(date);             // ← add
 
-  // Create socket once on mount
+  callbackRef.current = onSlotsUpdated;
+  serviceIdRef.current = serviceId;         // ← keep in sync
+  dateRef.current = date;                   // ← keep in sync
+
   useEffect(() => {
     const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
     socketRef.current = io(`${wsUrl}/appointments`, { transports: ['websocket'] });
 
     socketRef.current.on('slots-updated', (payload: { serviceId: string; date: string; availableSlots: string[] }) => {
-      // Guard: only fire for the room we care about (server already filters by room, but belt-and-suspenders)
-      if (payload.serviceId === serviceId && payload.date === date) {
+      console.log('slots-updated received', payload);           // ← add this
+      console.log('current filter', serviceIdRef.current, dateRef.current); // ← add this
+
+      if (payload.serviceId === serviceIdRef.current && payload.date === dateRef.current) {
         callbackRef.current(payload.availableSlots);
       }
     });
 
     return () => { socketRef.current?.disconnect(); socketRef.current = null; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Subscribe / unsubscribe when serviceId or date changes
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket) return;
