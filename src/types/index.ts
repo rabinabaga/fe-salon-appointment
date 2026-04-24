@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'staff';
+export type UserRole = 'CUSTOMER' | 'STAFF';
 export interface User { id: string; name: string; email: string; role: UserRole; }
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 export interface SalonService { id: string; name: string; duration: number; price: number; description?: string; isActive: boolean; }
