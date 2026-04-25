@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/ui/DashboardLayout';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Upload } from 'lucide-react';
+import { useBulkJobSocket } from '@/hooks/useBulkJobSocket';
 
 interface RowResult { rowIndex: number; customerEmail: string; status: 'SUCCESS' | 'FAILED'; error?: string; }
 interface Progress { total: number; processedCount: number; successCount: number; failCount: number; }
@@ -16,7 +17,16 @@ export default function BulkUploadPage() {
   const [done, setDone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
- 
+   useBulkJobSocket({
+    jobId,
+    onJobStarted: ({ totalRows }) => setProgress({ total: totalRows, processedCount: 0, successCount: 0, failCount: 0 }),
+    onRowProcessed: (e) => {
+      setProgress({ total: e.total, processedCount: e.processedCount, successCount: e.successCount, failCount: e.failCount });
+      setRows((prev) => [...prev, { rowIndex: e.rowIndex, customerEmail: e.customerEmail, status: e.status, error: e.error }]);
+    },
+    onJobCompleted: (e) => { setDone(true); toast.success(`Done! ${e.successCount} sent, ${e.failCount} failed`); },
+  });
+
   const handleUpload = async () => {
     const file = fileRef.current?.files?.[0];
     if (!file) return toast.error('Please select an Excel file');
@@ -28,7 +38,10 @@ export default function BulkUploadPage() {
       setJobId(res.data.data.id);
       setRows([]); setDone(false); setProgress(null);
       toast.success('File uploaded — processing started');
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Upload failed'); }
+    } catch (e: any) {
+      console.log(e,"error object");
+      
+      toast.error(e.response?.data?.message || 'Upload failed'); }
     finally { setUploading(false); }
   };
 
@@ -52,7 +65,44 @@ export default function BulkUploadPage() {
           {done && jobId && <Link to={`/bulk-jobs/${jobId}`} className="btn-secondary block text-center text-sm">View Full Log →</Link>}
         </div>
 
-        
+        <div className="card space-y-4">
+  <h2 className="font-display text-lg">Processing Status</h2>
+
+  {!progress && !done && (
+    <p className="text-sm text-espresso/40">Upload a file to see live progress</p>
+  )}
+
+  {progress && (
+    <>
+      {/* Progress bar */}
+      <div className="w-full bg-cream-100 rounded-full h-2">
+        <div
+          className="bg-gold h-2 rounded-full transition-all duration-300"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-sm text-espresso/60 text-right">{pct}% — {progress.processedCount} of {progress.total} rows</p>
+
+      {/* Counters */}
+      <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="bg-cream-50 rounded-lg p-3">
+          <p className="text-2xl font-display">{progress.processedCount}</p>
+          <p className="text-xs text-espresso/40">Processed</p>
+        </div>
+        <div className="bg-green-50 rounded-lg p-3">
+          <p className="text-2xl font-display text-green-600">{progress.successCount}</p>
+          <p className="text-xs text-espresso/40">Sent</p>
+        </div>
+        <div className="bg-red-50 rounded-lg p-3">
+          <p className="text-2xl font-display text-red-500">{progress.failCount}</p>
+          <p className="text-xs text-espresso/40">Failed</p>
+        </div>
+      </div>
+
+      {done && <p className="text-sm text-green-600 font-medium text-center">✓ Job complete</p>}
+    </>
+  )}
+</div>
       </div>
 
       {rows.length > 0 && (
