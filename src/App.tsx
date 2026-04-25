@@ -7,6 +7,9 @@ import DashboardPage from './pages/Dashboard';
 import NewAppointmentPage from './pages/NewAppointment';
 import ServicesPage from './pages/Services';
 import AppointmentsPage from './pages/Appointments';
+import { LogsPage, SettingsPage, TemplatesPage } from './pages/StaffPages';
+import BulkUploadPage from './pages/BulkUpload';
+import BulkJobDetailPage from './pages/BulkJobDetail';
 
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -31,7 +34,14 @@ export default function App() {
                 {/* Authenticated */}
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         <Route path="/appointments" element={<PrivateRoute><AppointmentsPage /></PrivateRoute>} />
-
+      <Route path="/bulk-jobs/upload" element={<PrivateRoute><BulkUploadPage /></PrivateRoute>} />
+        <Route path="/bulk-jobs/:id" element={<PrivateRoute><BulkJobDetailPage /></PrivateRoute>} />
+       
+                <Route path="/templates" element={<PrivateRoute><StaffRoute><TemplatesPage /></StaffRoute></PrivateRoute>} />
+        <Route path="/settigs" element={<PrivateRoute><StaffRoute><SettingsPage /></StaffRoute></PrivateRoute>} />
+   <Route path="/logs" element={<PrivateRoute><StaffRoute><LogsPage /></StaffRoute></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute><StaffRoute><SettingsPage /></StaffRoute></PrivateRoute>} />
+  
         <Route path="/appointments/new" element={<PrivateRoute><NewAppointmentPage /></PrivateRoute>} />
         <Route path="/services" element={<PrivateRoute><ServicesPage /></PrivateRoute>} />
 
